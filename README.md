@@ -40,10 +40,10 @@ Para documentação da API foi utilizado Swagger, acesse em:
 
 | ROTAS                   | VERBOS | OBJETIVO                                                                   |
 |-------------------------|--------|----------------------------------------------------------------------------|
-| /clients               | GET     | Lista todos os cliente por filtros via queryParams                         |
+| /clients               | GET     | Lista todos os clientes por filtros via queryParams                         |
 | /clients               | POST    | Cria um novo cliente                                                       |
 | /clients/{id}          | GET     | Lista um único cliente por id                                              |
-| /clients/{id}          | PUT     | Atualiza um client por id                                                  |
+| /clients/{id}          | PUT     | Atualiza um cliente por id                                                  |
 | /clients/{id}          | DELETE  | Remove um cliente por id                                                   |
 | /clients/{id}          | PATCH   | Atualiza o nome, cpf ou data de nascimento de um cliente por ID            |
 
