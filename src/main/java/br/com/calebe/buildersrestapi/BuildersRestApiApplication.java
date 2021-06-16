@@ -21,7 +21,7 @@ public class BuildersRestApiApplication {
         return args -> {
             var maria = new Client(
                     "Maria",
-                    "855.222.270-10",
+                    "85522227010",
                     LocalDate.of(2001, 2, 21)
             );
             clientRepository.save(maria);

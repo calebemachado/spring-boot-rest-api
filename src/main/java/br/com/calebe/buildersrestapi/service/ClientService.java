@@ -14,11 +14,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 
 @Service
 public class ClientService {
@@ -50,7 +55,7 @@ public class ClientService {
 
     public ClientDTO findById(Long id) {
         if (nonNull(id)) {
-            Client optionalClient = repository.findById(id)
+            var optionalClient = repository.findById(id)
                     .orElseThrow(() -> new ApiRequestException("Client with id: " + id + " not found."));
 
             return modelMapper.map(optionalClient, ClientDTO.class);
@@ -60,37 +65,72 @@ public class ClientService {
     }
 
     public Long create(ClientRequest clientRequest) {
-        Client clientEntity = modelMapper.map(clientRequest, Client.class);
+        var clientEntity = modelMapper.map(clientRequest, Client.class);
+
+        validateFields(clientEntity);
+
+        Optional<Client> optionalClient = repository.findByCpf(clientEntity.getCpf());
+        if (optionalClient.isPresent())
+            throw new ApiRequestException("Client with CPF already created.");
 
         return repository.save(clientEntity).getId();
     }
 
-    public void deleteById(Long id) {
-        if (nonNull(id)) {
-            repository.deleteById(id);
-        }
+    private void validateFields(Client clientEntity) {
+        if (isNull(clientEntity.getCpf()))
+            throw new ApiRequestException("CPF field is required");
 
-        throw new ApiRequestException("ID not informed");
+        if (isNull(clientEntity.getBirthDate()))
+            throw new ApiRequestException("Birth date field is required");
+
+        if (isNull(clientEntity.getName()))
+            throw new ApiRequestException("Name field is required");
+    }
+
+    public void deleteById(Long id) {
+        if (isNull(id))
+            throw new ApiRequestException("ID not informed");
+
+        repository.deleteById(id);
     }
 
     public void update(Long id, ClientDTO clientDTO) {
-        Client client = repository.findById(id)
+        var client = repository.findById(id)
                 .orElseThrow(() -> new ApiRequestException("Client with id: " + id + " not found."));
 
+        if (nonNull(clientDTO.getCpf())){
+            Optional<Client> optionalClient = repository.findByCpf(clientDTO.getCpf());
+
+            if (optionalClient.isPresent() && !Objects.equals(optionalClient.get().getId(), id))
+                throw new ApiRequestException("Client with CPF already created.");
+        }
+
         modelMapper.map(clientDTO, client);
+        validateFields(client);
+
         client.setId(id);
         repository.save(client);
     }
 
     public void patch(Long id, Map<String, Object> changes) {
-        Client client = repository.findById(id)
+        var client = repository.findById(id)
                 .orElseThrow(() -> new ApiRequestException("Client with id: " + id + " not found."));
 
-        repository.save(mapPatchingChanges(changes, client));
+        var mappedClientWithChanges = mapPatchingChanges(changes, client);
+
+        if (nonNull(mappedClientWithChanges.getCpf())){
+            Optional<Client> optionalClient = repository.findByCpf(mappedClientWithChanges.getCpf());
+
+            if (optionalClient.isPresent() && !Objects.equals(optionalClient.get().getId(), id))
+                throw new ApiRequestException("Client with CPF already created.");
+        }
+
+
+        repository.save(mappedClientWithChanges);
     }
 
     private Client mapPatchingChanges(Map<String, Object> changes, Client client) {
-        ClientDTO clientDTO = new ClientDTO();
+        var clientDTO = new ClientDTO();
         modelMapper.map(client, clientDTO);
 
         changes.forEach(
@@ -98,7 +138,7 @@ public class ClientService {
                     switch (change){
                         case "name": clientDTO.setName((String) value); break;
                         case "cpf": clientDTO.setCpf((String) value); break;
-                        case "birthDate": clientDTO.setBirthDate((LocalDate) value); break;
+                        case "birthDate": clientDTO.setBirthDate(handleLocalDate((String) value)); break;
                         default: break;
                     }
                 }
@@ -106,5 +146,14 @@ public class ClientService {
 
         modelMapper.map(clientDTO, client);
         return client;
+    }
+
+    private LocalDate handleLocalDate(String birthDate) {
+        if (isEmpty(birthDate)) {
+            return null;
+        } else {
+            var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            return LocalDate.parse(birthDate, formatter);
+        }
     }
 }

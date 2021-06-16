@@ -11,9 +11,6 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 public abstract class BaseEntity {
 
-    @Column(name = "active", nullable = false)
-    private boolean active = true;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -28,11 +25,6 @@ public abstract class BaseEntity {
 
     @PreUpdate
     protected void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreRemove
-    protected void preRemove() {
         this.updatedAt = LocalDateTime.now();
     }
 }

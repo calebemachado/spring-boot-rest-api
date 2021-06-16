@@ -25,6 +25,7 @@ public class Client extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "clients_seq_gen")
     @SequenceGenerator(name = "clients_seq_gen", sequenceName = "clients_id_seq", allocationSize = 1)
+    @Column(name="id")
     private Long id;
 
     @Column(name = "name", nullable = false)
@@ -51,5 +52,13 @@ public class Client extends BaseEntity {
         }
 
         return age;
+    }
+
+    public void setCpf(String cpf) {
+        if (nonNull(cpf)) {
+            this.cpf = cpf.replaceAll("[^a-zA-Z0-9]", "");
+        } else {
+            this.cpf = cpf;
+        }
     }
 }

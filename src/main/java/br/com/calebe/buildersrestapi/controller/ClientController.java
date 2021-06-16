@@ -18,7 +18,7 @@ import static java.util.Objects.isNull;
 
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping(value = "/api/clients", consumes = "application/json", produces = "application/json")
+@RequestMapping(value = "/api/clients", produces = "application/json")
 public class ClientController {
 
     @Autowired
